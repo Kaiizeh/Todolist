@@ -91,11 +91,21 @@ const closeMenuState = () => {
 
 const applyNewState = (state) => {
     tasks.value[indexTask.value].state = state;
+    updateTodolist({
+        ...todolist.value,
+        tasks: tasks.value,
+    });
     closeMenuState();
 };
 
 const invalidLabel = computed(() => (newLabel.value === null || newLabel.value.length === 0));
 const invalidTitle = computed(() => (newTitle.value === null || newTitle.value.length === 0));
+
+const getProgress = tasks => {
+    return tasks.length > 0 ? (tasks.filter(task => task.state.label ===
+                        STATES.COMPLETE.label).length /
+                        tasks.length * 100).toFixed(2) : 0
+}
 
 </script>
 
@@ -106,7 +116,7 @@ const invalidTitle = computed(() => (newTitle.value === null || newTitle.value.l
             <div class="text-3xl font-bold tooltip text-start" v-if="!isEditTitle">
                 <span class="tooltip tooltip-bottom cursor-pointer" data-tip="Cliquer pour modifier le titre"
                     @click="manageEditTitle">
-                    {{ todolist.title }}
+                    {{ todolist?.title }}
                 </span>
             </div>
             <div class="form-control w-full max-w-xs" v-if="isEditTitle">
@@ -131,7 +141,7 @@ const invalidTitle = computed(() => (newTitle.value === null || newTitle.value.l
                         <FontAwesomeIcon :icon="faList" size="2xl" />
                     </div>
                     <div class="stat-title">Nombre de tâche</div>
-                    <div class="stat-value">{{ todolist.tasks.length }}</div>
+                    <div class="stat-value">{{ tasks.length }}</div>
                     <div class="stat-desc">Dernière ajout : Aujourd'hui</div>
                 </div>
 
@@ -146,11 +156,10 @@ const invalidTitle = computed(() => (newTitle.value === null || newTitle.value.l
 
                 <div class="stat">
                     <div class="stat-figure text-secondary">
-                        <FontAwesomeIcon :icon="faBarsProgress" size="2xl"/>
+                        <FontAwesomeIcon :icon="faBarsProgress" size="2xl" />
                     </div>
                     <div class="stat-title">Progression</div>
-                    <div class="stat-value">{{ (tasks.filter(task => task.state.label === STATES.COMPLETE.label).length /
-                        tasks.length * 100).toFixed(2) }}%</div>
+                    <div class="stat-value">{{ getProgress(tasks) }}%</div>
                 </div>
 
             </div>
@@ -164,12 +173,14 @@ const invalidTitle = computed(() => (newTitle.value === null || newTitle.value.l
                 </div>
                 <ul class="h-[40rem] overflow-y-auto">
                     <li v-for="(task, index) in tasks" class="flex items-center w-full text-xl relative mt-2">
-                        <div v-if="indexTask !== index || !isEditLabel" @click.stop="openEditLabel(index)" class="cursor-pointer w-full">
-                            <div :class="task.state.color"
-                            class="w-[15px] h-[15px] rounded me-2 tooltip tooltip-right cursor-pointer"
-                            data-tip="Cliquer pour changer l'état de la tâche" @click.stop="openMenuState(index)"></div>
+                        <div v-if="indexTask !== index || !isEditLabel" @click.stop="openEditLabel(index)"
+                            class="cursor-pointer w-full">
+                            <div :style="{ background: task.state.color }"
+                                class="w-[15px] h-[15px] rounded me-2 tooltip tooltip-right cursor-pointer"
+                                data-tip="Cliquer pour changer l'état de la tâche" @click.stop="openMenuState(index)"></div>
                             <span>{{ task.label }}</span>
-                            <button class="btn btn-circle btn-outline btn-error btn-sm float-right" @click.stop="() => manageModal(index)">
+                            <button class="btn btn-circle btn-outline btn-error btn-sm float-right"
+                                @click.stop="() => manageModal(index)">
                                 <FontAwesomeIcon :icon="faTrashCan" />
                             </button>
                         </div>
@@ -200,7 +211,7 @@ const invalidTitle = computed(() => (newTitle.value === null || newTitle.value.l
                             </div>
                             <li v-for="state in STATES" @click="applyNewState(state)"
                                 class="flex flex-row items-center p-1 w-full cursor-pointer hover:bg-base-100 rounded transition duration-300">
-                                <div class="rounded w-[15px] h-[15px] me-3" :class="state.color"></div>
+                                <div class="rounded w-[15px] h-[15px] me-3" :style="{ background: state.color }"></div>
                                 <span class="text-sm">{{ state.label }}</span>
                             </li>
                         </ul>
@@ -210,7 +221,8 @@ const invalidTitle = computed(() => (newTitle.value === null || newTitle.value.l
             </div>
         </div>
     </div>
-    <Modal title="Suppresion d'une tâche" @confirmAction="removeTask()" @denyAction="() => manageModal(null)" v-if="isOpenModal">
+    <Modal title="Suppression d'une tâche" @confirmAction="removeTask()" @denyAction="() => manageModal(null)"
+        v-if="isOpenModal">
         <div class="text-center">
             Êtes-vous sûr de vouloir supprimer la tâche "{{ tasks[indexTask].label }}"
         </div>

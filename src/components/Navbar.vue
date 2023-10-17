@@ -1,10 +1,14 @@
 <script setup>
 import { faGear, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import { inject } from 'vue';
+import { inject, ref } from 'vue';
+import Modal from '../ui_components/Modal.vue';
 
 const { todolists, index, addTodolist, setTodolist, removeTodolist } = inject("TodolistProvider");
 const { path, changePath } = inject("Routing");
+
+const isOpenModal = ref(false);
+const todolistTarget = ref(null);
 
 const createTodolist = () => {
     addTodolist();
@@ -15,6 +19,16 @@ const useTodolist = (index) => {
     setTodolist(index);
     changePath('Todolist');
 };
+
+const remove = () => {
+    removeTodolist(todolistTarget.value);
+    manageModal(null);
+}
+
+const manageModal = (i) => {
+    todolistTarget.value = i;
+    isOpenModal.value = !isOpenModal.value;
+}
 
 </script>
 
@@ -30,18 +44,18 @@ const useTodolist = (index) => {
             <ul>
                 <li v-for="(todolist, i) in todolists" class="mb-2 text-white hover:bg-neutral font-semibold p-2 rounded-lg cursor-pointer flex justify-between items-center" :class="{'bg-primary-focus': (index == i)}" @click="() => useTodolist(i)">
                     {{ todolist.title ?? "Liste des tâches " + i }}
-                    <button class="btn btn-circle hover:btn-error hover:text-white btn-ghost btn-sm tooltip" data-tip="Supprimer la liste" @click.prevent="removeTodolist(i)">
+                    <button class="btn btn-circle hover:btn-error hover:text-white btn-ghost btn-sm tooltip" data-tip="Supprimer la liste" @click.stop="manageModal(i)">
                         <FontAwesomeIcon :icon="faTrash"/>
                     </button>
-                </li>
-                <div class="h-[1px] w-full bg-base-content mb-2"></div>
-                <li class="mb-2 text-white hover:bg-neutral font-semibold p-2 rounded-lg cursor-pointer" @click="null">
-                    <FontAwesomeIcon :icon="faGear" class="me-2"/>
-                    Paramètres
                 </li>
             </ul>
         </div>
     </div>
+    <Modal title="Suppression d'une liste" @confirmAction="remove()" @denyAction="() => manageModal(null)" v-if="isOpenModal">
+        <div class="text-center">
+            Êtes-vous sûr de vouloir supprimer la liste "{{ todolists[todolistTarget].title }}"
+        </div>
+    </Modal>
 </template>
 
 <style scoped>

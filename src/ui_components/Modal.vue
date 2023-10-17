@@ -20,9 +20,7 @@ const props = defineProps(["title"]);
                         <FontAwesomeIcon :icon="faXmark" />
                     </button>
                 </div>
-                <slot>
-
-                </slot>
+                <slot></slot>
                 <div class="flex flex-row mx-auto">
                     <button class="btn btn-success btn-outline ms-3" @click="$emit('confirmAction')">
                         Valider

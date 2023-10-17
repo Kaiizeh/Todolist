@@ -1,15 +1,19 @@
 <script setup>
 import { computed, provide, ref } from 'vue';
+import { TOAST } from './utils/constants';
 
-//import des composants
+//import des views
 import Navbar from "./components/Navbar.vue";
 import Todolist from "./components/Todolist.vue";
 import Home from './components/Home.vue';
 
+//import des composants
+import Toast from './ui_components/Toast.vue';
+
 //Différentes vues de l'application
 const views = {
   "Todolist": Todolist,
-  "Home": Home,
+  "Home": Home
 };
 
 //path actuel
@@ -29,12 +33,13 @@ provide("Routing", {
 const todolists = ref(JSON.parse(window.localStorage.getItem("todolists")) ?? []);
 const todolist = ref(null);
 const index = ref(null);
+const isShowToast = ref(false);
+const toastInfo = ref(null);
 
-console.log(todolists.value);
-
-const savingTodolists = () => {
+const savingTodolists = (info) => {
   window.localStorage.setItem("todolists", JSON.stringify(todolists.value));
-  console.log("Saving...", todolists.value);
+  toastInfo.value = info;
+  isShowToast.value = true;
 };
 
 provide("TodolistProvider", {
@@ -46,18 +51,23 @@ provide("TodolistProvider", {
     todolist.value = todolists.value[pIndex];
   },
   addTodolist: () => {
-    todolists.value.push({title: "Nouvelle liste", tasks: []});
+    todolist.value = {
+      title: "Nouvelle liste", 
+      tasks: []
+    };
+    todolists.value.push(todolist.value);
     index.value = todolists.value.length - 1;
-    savingTodolists();
+    savingTodolists(TOAST.CREATING);
   },
   updateTodolist: (updateTodolist) => {
     todolist.value = updateTodolist;
     todolists.value.splice(index, 1, updateTodolist);
-    savingTodolists();
+    savingTodolists(TOAST.UPDATING);
   },
   removeTodolist: (pIndex) => {
+    if(pIndex == index.value) path.value = "Home";
     todolists.value.splice(pIndex, 1);
-    savingTodolists();
+    savingTodolists(TOAST.DELETING);
   }
 });
 
@@ -68,6 +78,7 @@ provide("TodolistProvider", {
     <Navbar />
     <component :is="currentView"/>
   </div>
+  <Toast :info="toastInfo" @closeToast="() => isShowToast = false" v-if="isShowToast"/>
 </template>
 
 <style scoped></style>

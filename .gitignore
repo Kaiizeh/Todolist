@@ -1,2 +1,8 @@
 /package-lock.json
 /node_modules/
+.idea/git_toolbox_prj.xml
+.gitignore
+.idea/modules.xml
+.idea/php.xml
+.idea/Todolist.iml
+.idea/vcs.xml
